@@ -20,12 +20,7 @@ public class ClubService
 
     public Club CreateClub(string name, string description, string presidentEmail)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Club name is required");
-        if (name.Length > 100)
-            throw new ArgumentException("Club name too long");
-
-        var club = new Club { Id = Guid.NewGuid(), Name = name, Description = description };
+	var club = Club.Create(name, description);
         _clubs.Add(club);
         _logger.Log($"Club created: {name}");
 
@@ -40,8 +35,8 @@ public class ClubService
         var club = _clubs.GetById(clubId)
             ?? throw new InvalidOperationException("Club not found");
 
-        if (_members.CountByClub(clubId) >= 50)
-            throw new InvalidOperationException("Club is full (max 50 members)");
+        if (!club.HasRoom(_members.CountByClub(clubId)))
+            throw new InvalidOperationException($"Club is full (max {Club.MaxMembers} members)");
 
         var member = new Member { Id = Guid.NewGuid(), Name = memberName, Email = email, ClubId = clubId };
         _members.Add(member);
